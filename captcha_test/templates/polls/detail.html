@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,12 +12,29 @@
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
 <form action="{% url 'polls:vote' question.id %}" method="post">
-{% csrf_token %}
-{% for choice in question.choice_set.all %}
-    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
-    <label for="choice{{ forloop.counter }}">{{ choice.choice_text }} > {{ choice.votes }}</label><br />
-{% endfor %}
-<input type="submit" value="Vote" />
+    {% csrf_token %}
+    {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}"/>
+        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }} > {{ choice.votes }}</label><br/>
+    {% endfor %}
+    {{ form.captcha.errors }}
+    {{ form.captcha }}
+    <br>
+    <input type="submit" value="Vote"/>
 </form>
+<script src="{% static 'polls/jquery-3.3.1.min.js' %}" type="application/javascript"></script>
+{#<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="application/javascript"></script>#}
+<script type="application/javascript">
+    $('.captcha').click(function () {
+        {#console.log('click');#}
+        $.getJSON("/captcha/refresh/", function (result) {
+            $('.captcha').attr('src', result['image_url']);
+            $('#id_captcha_0').val(result['key'])
+        });
+
+
+    });
+</script>
 </body>
+
 </html>

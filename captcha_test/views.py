@@ -6,11 +6,12 @@
 # @Software: PyCharm
 
 
-from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
 
+from .forms import CaptchaTestForm
 from .models import Choice, Question
 
 
@@ -27,6 +28,16 @@ class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
 
+    def get_context_data(self, **kwargs):
+        """
+        2. 如果使用 generic view, 添加验证码form到context中返回到template
+        :param kwargs:
+        :return:
+        """
+        context = super().get_context_data(**kwargs)
+        context['form'] = CaptchaTestForm()
+        return context
+
 
 class ResultsView(generic.DetailView):
     model = Question
@@ -35,14 +46,19 @@ class ResultsView(generic.DetailView):
 
 def vote(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
+    form = CaptchaTestForm(request.POST)
+
+    # 3. Validate the form: the captcha field will automatically
+    # check the input
+    if not form.is_valid():
+        # error_message = "You didn't pass in the captcha change."
+        return render(request, 'polls/detail.html', locals())
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
-        return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': "You didn't select a choice.",
-        })
+        error_message = "You didn't select a choice."
+        return render(request, 'polls/detail.html', locals())
     else:
         selected_choice.votes += 1
         selected_choice.save()
