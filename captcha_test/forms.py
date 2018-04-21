@@ -13,4 +13,5 @@ class CaptchaTestForm(forms.Form):
     """
         1. 构建一个Form
     """
-    captcha = CaptchaField()
+    error_message = {'invalid': "验证码不通过"}
+    captcha = CaptchaField(error_messages=error_message)
